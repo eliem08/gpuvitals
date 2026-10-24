@@ -2,15 +2,19 @@ import unittest
 
 from gpu_carfax import grade, parse_capture
 
-HEADER = ("timestamp, name, serial, temperature.gpu, power.draw [W], power.limit [W], clocks.sm [MHz], clocks.max.sm [MHz], "
-          "utilization.gpu [%], fan.speed [%], ecc.errors.corrected.volatile.total, ecc.errors.uncorrected.volatile.total, retired_pages.pending")
+HEADER = (
+    "timestamp, name, serial, temperature.gpu, power.draw [W], power.limit [W], clocks.sm [MHz], clocks.max.sm [MHz], "
+    "utilization.gpu [%], fan.speed [%], ecc.errors.corrected.volatile.total, ecc.errors.uncorrected.volatile.total, retired_pages.pending"
+)
 
 
 def capture(temp, power, clock, fan, ecc_c=0, ecc_u=0, n=10):
     rows = [HEADER]
     for i in range(n):
-        rows.append(f"2026/10/24 10:00:{i:02d}, NVIDIA GeForce RTX 3090, 0324, {temp}, {power} W, 350.00 W, {clock} MHz, 2100 MHz, "
-                    f"99 %, {fan} %, {ecc_c}, {ecc_u}, No")
+        rows.append(
+            f"2026/10/24 10:00:{i:02d}, NVIDIA GeForce RTX 3090, 0324, {temp}, {power} W, 350.00 W, {clock} MHz, 2100 MHz, "
+            f"99 %, {fan} %, {ecc_c}, {ecc_u}, No"
+        )
     return "\n".join(rows)
 
 
@@ -30,7 +34,15 @@ class Tests(unittest.TestCase):
         r = grade(capture(91, 250, 1500, 100, ecc_c=40), hours=30000, mining=True, market_price=800)
         self.assertIn(r.grade, {"D", "F"})
         reasons = " ".join(x for x, _ in r.deductions)
-        for needle in ("throttling", "SM clock", "power limit", "fan maxed", "corrected ECC", "power-on hours", "mining"):
+        for needle in (
+            "throttling",
+            "SM clock",
+            "power limit",
+            "fan maxed",
+            "corrected ECC",
+            "power-on hours",
+            "mining",
+        ):
             self.assertIn(needle, reasons)
         self.assertLess(r.fair_price, 500)
 

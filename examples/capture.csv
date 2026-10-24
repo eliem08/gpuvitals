@@ -1,0 +1,9 @@
+timestamp, name, serial, temperature.gpu, power.draw [W], power.limit [W], clocks.sm [MHz], clocks.max.sm [MHz], utilization.gpu [%], fan.speed [%], ecc.errors.corrected.volatile.total, ecc.errors.uncorrected.volatile.total, retired_pages.pending
+2026/10/24 10:00:00.000, NVIDIA GeForce RTX 3090, 1324021000001, 41, 32.10 W, 350.00 W, 210 MHz, 2100 MHz, 0 %, 30 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:01.000, NVIDIA GeForce RTX 3090, 1324021000001, 63, 338.20 W, 350.00 W, 1875 MHz, 2100 MHz, 99 %, 64 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:02.000, NVIDIA GeForce RTX 3090, 1324021000001, 74, 346.90 W, 350.00 W, 1830 MHz, 2100 MHz, 100 %, 78 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:03.000, NVIDIA GeForce RTX 3090, 1324021000001, 81, 341.50 W, 350.00 W, 1740 MHz, 2100 MHz, 100 %, 92 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:04.000, NVIDIA GeForce RTX 3090, 1324021000001, 84, 312.00 W, 350.00 W, 1605 MHz, 2100 MHz, 100 %, 100 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:05.000, NVIDIA GeForce RTX 3090, 1324021000001, 85, 305.40 W, 350.00 W, 1590 MHz, 2100 MHz, 100 %, 100 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:06.000, NVIDIA GeForce RTX 3090, 1324021000001, 85, 301.70 W, 350.00 W, 1575 MHz, 2100 MHz, 100 %, 100 %, [N/A], [N/A], [N/A]
+2026/10/24 10:00:07.000, NVIDIA GeForce RTX 3090, 1324021000001, 84, 303.10 W, 350.00 W, 1590 MHz, 2100 MHz, 99 %, 100 %, [N/A], [N/A], [N/A]

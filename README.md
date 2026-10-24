@@ -1,5 +1,7 @@
 # gpu-carfax
 
+[![CI](https://github.com/eliem08/gpu-carfax/actions/workflows/ci.yml/badge.svg)](https://github.com/eliem08/gpu-carfax/actions/workflows/ci.yml)
+
 > **Carfax for used GPUs** — a health report before you buy secondhand.
 
 A wave of ex-datacenter and ex-mining GPUs is hitting eBay. Some are fine;
@@ -36,3 +38,26 @@ gpu-carfax report capture.csv --hours 14000 --mining --market-price 1400
 - Signed capture agent (tamper-evident) + hosted public report pages
 - Marketplace integrations: "Carfax verified" badge on listings
 - Fleet-level history: same serial seen across resales
+
+## Development
+
+Zero runtime dependencies; Python 3.10+.
+
+```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+python -m unittest discover -s tests -t .           # unit + CLI smoke tests
+ruff check . && ruff format --check .               # lint + format
+```
+
+```
+gpu_carfax/core.py       domain logic (pure, importable, fully tested)
+gpu_carfax/__main__.py   CLI (`gpu-carfax ...` / `python -m gpu_carfax ...`)
+tests/                unit tests + generated CLI smoke tests
+examples/             sample inputs used by the docs and smoke tests
+```
+
+CI runs lint and tests on Ubuntu and Windows across Python 3.10, 3.12 and 3.13.
+Design, data model, trade-offs and production path: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+Part of the [agent-economy](https://github.com/eliem08/agent-economy) portfolio (idea #18).

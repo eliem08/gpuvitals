@@ -1,4 +1,5 @@
 """Health grading for used GPUs from nvidia-smi stress captures."""
+
 from __future__ import annotations
 
 import csv
@@ -9,9 +10,21 @@ from dataclasses import dataclass, field
 
 __all__ = ["CAPTURE_CMD", "parse_capture", "grade", "Report"]
 
-FIELDS = ["timestamp", "name", "serial", "temperature.gpu", "power.draw", "power.limit", "clocks.sm", "clocks.max.sm",
-          "utilization.gpu", "fan.speed", "ecc.errors.corrected.volatile.total", "ecc.errors.uncorrected.volatile.total",
-          "retired_pages.pending"]
+FIELDS = [
+    "timestamp",
+    "name",
+    "serial",
+    "temperature.gpu",
+    "power.draw",
+    "power.limit",
+    "clocks.sm",
+    "clocks.max.sm",
+    "utilization.gpu",
+    "fan.speed",
+    "ecc.errors.corrected.volatile.total",
+    "ecc.errors.uncorrected.volatile.total",
+    "retired_pages.pending",
+]
 CAPTURE_CMD = f"nvidia-smi --query-gpu={','.join(FIELDS)} --format=csv -l 1 > capture.csv"
 
 
@@ -56,8 +69,13 @@ def _vals(rows, key):
     return [r[key] for r in rows if r.get(key) is not None]
 
 
-def grade(text: str, hours: float | None = None, mining: bool = False, market_price: float | None = None,
-          throttle_temp: float = 83.0) -> Report:
+def grade(
+    text: str,
+    hours: float | None = None,
+    mining: bool = False,
+    market_price: float | None = None,
+    throttle_temp: float = 83.0,
+) -> Report:
     rows = parse_capture(text)
     load = [r for r in rows if (r.get("utilization.gpu") or 0) >= 90] or rows
     temps = _vals(load, "temperature.gpu")
@@ -76,7 +94,9 @@ def grade(text: str, hours: float | None = None, mining: bool = False, market_pr
         "clock_ratio": (sum(clocks) / len(clocks) / max_clock) if clocks and max_clock else None,
         "power_ratio": (max(power) / limit) if power and limit else None,
         "fan_peak": max(fans) if fans else None,
-        "ecc_corrected": ecc_c, "ecc_uncorrected": ecc_u, "retired_pending": retired,
+        "ecc_corrected": ecc_c,
+        "ecc_uncorrected": ecc_u,
+        "retired_pending": retired,
     }
     d = []
     if m["peak_temp"] is not None and m["peak_temp"] >= throttle_temp:
@@ -84,7 +104,7 @@ def grade(text: str, hours: float | None = None, mining: bool = False, market_pr
     elif m["sustained_temp"] is not None and m["sustained_temp"] >= throttle_temp - 8:
         d.append(("runs hot under load", 6))
     if m["clock_ratio"] is not None and m["clock_ratio"] < 0.9:
-        d.append((f"SM clock only {m['clock_ratio']:.0%} of max boost", round(min(25, (0.9 - m['clock_ratio']) * 100))))
+        d.append((f"SM clock only {m['clock_ratio']:.0%} of max boost", round(min(25, (0.9 - m["clock_ratio"]) * 100))))
     if m["power_ratio"] is not None and m["power_ratio"] < 0.8:
         d.append((f"can't reach power limit ({m['power_ratio']:.0%})", 8))
     if m["fan_peak"] is not None and m["fan_peak"] >= 95 and (m["sustained_temp"] or 0) >= throttle_temp - 8:
@@ -106,7 +126,13 @@ def grade(text: str, hours: float | None = None, mining: bool = False, market_pr
     first = rows[0] if rows else {}
     return Report(
         report_id=hashlib.sha256(text.encode()).hexdigest()[:16],
-        gpu=first.get("name", "?"), serial=first.get("serial", "?"), samples=len(rows),
-        score=score, grade=g, deductions=[(r, round(p, 1)) for r, p in d], metrics=m,
-        price_multiplier=mult, fair_price=round(market_price * mult, 2) if market_price else None,
+        gpu=first.get("name", "?"),
+        serial=first.get("serial", "?"),
+        samples=len(rows),
+        score=score,
+        grade=g,
+        deductions=[(r, round(p, 1)) for r, p in d],
+        metrics=m,
+        price_multiplier=mult,
+        fair_price=round(market_price * mult, 2) if market_price else None,
     )
