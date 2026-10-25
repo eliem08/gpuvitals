@@ -1,19 +1,47 @@
-# gpu-carfax
+<!-- sell-kit:start -->
+# GPU Vitals
 
-[![CI](https://github.com/eliem08/gpu-carfax/actions/workflows/ci.yml/badge.svg)](https://github.com/eliem08/gpu-carfax/actions/workflows/ci.yml)
+[![CI](https://github.com/eliem08/gpuvitals/actions/workflows/ci.yml/badge.svg)](https://github.com/eliem08/gpuvitals/actions/workflows/ci.yml)
 
-> **Carfax for used GPUs** — a health report before you buy secondhand.
+> **A health report for a used GPU before you buy it.**
 
-A wave of ex-datacenter and ex-mining GPUs is hitting eBay. Some are fine;
-some have been cooked at 90 °C for two years and throw ECC errors under load.
-`gpu-carfax` turns a short stress-test telemetry capture into a graded,
-shareable health report — so buyers know what they're getting and honest
-sellers get a better price.
+**Who it's for:** Buyers and sellers of secondhand GPUs, and the marketplaces in between.
 
-## What the MVP does
+**The problem:** Used GPUs, especially ex-mining cards, hide thermal, clock and memory problems that only show up after you've paid.
+
+**What you get:** Grade an nvidia-smi stress capture from A to F with explained deductions and a fair-price multiplier.
+
+## Quickstart
+
+Customers receive a release archive with the wheel and the examples. Python 3.10+ and no other dependencies.
+
+```bash
+pip install gpuvitals-0.1.0-py3-none-any.whl
+gpuvitals capture-cmd
+gpuvitals report examples/capture.csv --hours 14000 --market-price 800
+```
+
+## Pricing
+
+Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless noted.
+
+| Plan | Price | Includes |
+|---|---|---|
+| **Single report** | $9 per GPU | A-F grade; Itemised deductions; Fair-price estimate |
+| **Seller** | $49 per month | Unlimited reports; Shareable report IDs; Listing badge |
+| **Marketplace** | $499 per month | API access; Bulk grading; Fraud checks |
+
+To start a trial or buy a plan, email **sales@YOUR-DOMAIN.com**.
+
+## Licence
+
+Proprietary. Copyright (c) 2026 eliem08. All rights reserved. Use requires a paid plan or an active trial; see [LICENSE](LICENSE).
+<!-- sell-kit:end -->
+
+## What it does
 
 - Parses `nvidia-smi --query-gpu=... --format=csv` captures taken during a
-  stress run (`gpu-carfax capture-cmd` prints the exact command)
+  stress run (`gpuvitals capture-cmd` prints the exact command)
 - Checks:
   - **thermals**: peak and sustained temperature vs. throttle threshold
   - **clocks**: SM clock under load vs. max boost (throttling / degraded silicon)
@@ -29,8 +57,8 @@ sellers get a better price.
 
 ```bash
 pip install -e .
-gpu-carfax capture-cmd                    # run this on the seller's machine during a 10-min stress test
-gpu-carfax report capture.csv --hours 14000 --mining --market-price 1400
+gpuvitals capture-cmd                    # run this on the seller's machine during a 10-min stress test
+gpuvitals report capture.csv --hours 14000 --mining --market-price 1400
 ```
 
 ## Roadmap
@@ -51,8 +79,8 @@ ruff check . && ruff format --check .               # lint + format
 ```
 
 ```
-gpu_carfax/core.py       domain logic (pure, importable, fully tested)
-gpu_carfax/__main__.py   CLI (`gpu-carfax ...` / `python -m gpu_carfax ...`)
+gpuvitals/core.py       domain logic (pure, importable, fully tested)
+gpuvitals/__main__.py   CLI (`gpuvitals ...` / `python -m gpuvitals ...`)
 tests/                unit tests + generated CLI smoke tests
 examples/             sample inputs used by the docs and smoke tests
 ```

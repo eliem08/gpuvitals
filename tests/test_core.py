@@ -1,6 +1,6 @@
 import unittest
 
-from gpu_carfax import grade, parse_capture
+from gpuvitals import grade, parse_capture
 
 HEADER = (
     "timestamp, name, serial, temperature.gpu, power.draw [W], power.limit [W], clocks.sm [MHz], clocks.max.sm [MHz], "

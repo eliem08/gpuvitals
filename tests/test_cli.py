@@ -11,7 +11,7 @@ import pathlib
 import tempfile
 import unittest
 
-from gpu_carfax.__main__ import main
+from gpuvitals.__main__ import main
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 COMMANDS = [

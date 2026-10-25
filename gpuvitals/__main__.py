@@ -17,7 +17,7 @@ def _finite_float(s: str) -> float:
 
 
 def _run(argv=None):
-    ap = argparse.ArgumentParser(prog="gpu-carfax")
+    ap = argparse.ArgumentParser(prog="gpuvitals")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("capture-cmd")
     r = sub.add_parser("report")

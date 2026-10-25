@@ -1,4 +1,4 @@
-# Architecture — gpu-carfax
+# Architecture — gpuvitals
 
 ## 1. Scope
 Graded, verifiable health reports for used GPUs from stress-test telemetry.
