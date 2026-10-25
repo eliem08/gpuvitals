@@ -16,7 +16,7 @@ def _finite_float(s: str) -> float:
     return v
 
 
-def _run(argv=None):
+def build_parser():
     ap = argparse.ArgumentParser(prog="gpuvitals")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("capture-cmd")
@@ -26,6 +26,11 @@ def _run(argv=None):
     r.add_argument("--mining", action="store_true")
     r.add_argument("--market-price", type=_finite_float)
     r.add_argument("--json", action="store_true")
+    return ap
+
+
+def _run(argv=None):
+    ap = build_parser()
     a = ap.parse_args(argv)
     if a.cmd == "capture-cmd":
         print("# Start a stress test (e.g. gpu-burn 600) in another terminal, then run:")
