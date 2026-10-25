@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import math
 import re
 from dataclasses import dataclass, field
 
@@ -25,6 +26,7 @@ FIELDS = [
     "ecc.errors.uncorrected.volatile.total",
     "retired_pages.pending",
 ]
+MIN_LOAD_SAMPLES = 5  # seconds at >=90% utilisation; a seller cannot get an "A" from an idle or empty capture
 CAPTURE_CMD = f"nvidia-smi --query-gpu={','.join(FIELDS)} --format=csv -l 1 > capture.csv"
 
 
@@ -40,7 +42,14 @@ def _num(v: str):
 
 def parse_capture(text: str) -> list[dict]:
     reader = csv.reader(io.StringIO(text))
-    header = [re.sub(r"\s*\[.*?\]", "", h).strip() for h in next(reader)]
+    first = next(reader, None)
+    if not first:
+        raise ValueError("empty capture")
+    header = [re.sub(r"\s*\[.*?\]", "", h).strip() for h in first]
+    missing = [f for f in FIELDS if f not in header]
+    if missing:
+        # a dropped column (e.g. ECC) would otherwise read as "no problems found"
+        raise ValueError(f"capture is missing fields {missing}; run: {CAPTURE_CMD}")
     rows = []
     for r in reader:
         if not r:
@@ -75,9 +84,20 @@ def grade(
     mining: bool = False,
     market_price: float | None = None,
     throttle_temp: float = 83.0,
+    min_load_samples: int = MIN_LOAD_SAMPLES,
 ) -> Report:
+    for name, v in (("hours", hours), ("market_price", market_price)):
+        if v is not None and not (math.isfinite(v) and v >= 0):
+            raise ValueError(f"{name} must be a finite number >= 0, got {v!r}")
     rows = parse_capture(text)
-    load = [r for r in rows if (r.get("utilization.gpu") or 0) >= 90] or rows
+    serials = {r.get("serial") for r in rows}
+    if len(serials) > 1:
+        raise ValueError(f"capture covers {len(serials)} GPUs ({sorted(serials)}); grade one card per capture")
+    load = [r for r in rows if (r.get("utilization.gpu") or 0) >= 90]
+    if len(load) < min_load_samples:
+        raise ValueError(
+            f"only {len(load)} samples at >=90% load (need {min_load_samples}); run a stress test while capturing"
+        )
     temps = _vals(load, "temperature.gpu")
     clocks = _vals(load, "clocks.sm")
     max_clock = max(_vals(rows, "clocks.max.sm") or [0])

@@ -53,6 +53,31 @@ class Tests(unittest.TestCase):
         c = capture(70, 340, 1950, 60)
         self.assertEqual(grade(c).report_id, grade(c).report_id)
 
+    def test_seller_cannot_get_a_grade_from_an_empty_idle_or_stripped_capture(self):
+        idle = capture(40, 60, 300, 30).replace(" 99 %,", " 3 %,")
+        stripped = "\n".join(
+            ",".join(cell for i, cell in enumerate(line.split(",")) if i not in (10, 11))
+            for line in capture(70, 340, 1950, 60, ecc_u=9).splitlines()
+        )
+        for label, text in (("empty", ""), ("header only", HEADER), ("too short", capture(70, 340, 1950, 60, n=2))):
+            with self.subTest(label), self.assertRaises(ValueError):
+                grade(text)
+        with self.assertRaisesRegex(ValueError, "load"):
+            grade(idle)
+        with self.assertRaisesRegex(ValueError, "missing fields"):
+            grade(stripped)
+
+    def test_multi_gpu_capture_is_refused_not_averaged(self):
+        a = capture(70, 340, 1950, 60)
+        b = capture(95, 200, 1200, 100, ecc_u=5).replace(", 0324,", ", 0999,")
+        with self.assertRaisesRegex(ValueError, "2 GPUs"):
+            grade(a + "\n" + "\n".join(b.splitlines()[1:]))
+
+    def test_hours_and_price_must_be_finite(self):
+        for kw in ({"hours": float("inf")}, {"hours": -5}, {"market_price": float("nan")}):
+            with self.subTest(kw=kw), self.assertRaises(ValueError):
+                grade(capture(70, 340, 1950, 60), **kw)
+
 
 if __name__ == "__main__":
     unittest.main()
