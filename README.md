@@ -46,7 +46,7 @@ Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless
 | **Seller** | $49 per month | Unlimited reports; Shareable report IDs; Listing badge |
 | **Marketplace** | $499 per month | API access; Bulk grading; Fraud checks |
 
-To start a trial or buy a plan, email **sales@YOUR-DOMAIN.com**.
+To start a trial or buy a plan, [request access](https://github.com/eliem08/gpuvitals/issues/new?title=GPU%20Vitals%20trial&labels=sales).
 
 ## Licence
 
