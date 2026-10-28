@@ -15,6 +15,8 @@ flowchart LR
   Buyer -->|verify link / serial| Report
   Report --> History[(Serial history)]
 ```
+Note: the capture agent, signed captures, public report pages, and serial history in this
+diagram are roadmap items, not shipped — the MVP grades local CSV captures (see §1).
 
 ## 3. Grading model
 Only **load-phase samples** (utilisation ≥ 90%) are used, so idle samples don't flatter the card.
@@ -30,9 +32,12 @@ declared mining. Score = 100 − Σ, graded A to F, with a price multiplier per 
   *Trade-off:* this doesn't prove the capture came from *that* card. The product's capture agent
   signs `{serial, capture, timestamp}` with a key bound to the run and records `nvidia-smi -q` identity fields.
 
-## 5. Production architecture
+## 5. Future production architecture (not shipped)
 A Go capture agent (bundles gpu-burn), a stateless report API, Postgres (reports, serials) and
 static report pages on a CDN. A marketplace partner API exposes `GET /reports/{id}` and `GET /serials/{serial}`.
+None of this is in this release: the signed capture agent, hosted public report pages, marketplace
+badges, and serial history are Roadmap items (see README Roadmap). This release grades local CSV
+captures only.
 
 ## 6. Risks
 Tampered captures (signed agent, plausibility checks across power, clock and temperature
