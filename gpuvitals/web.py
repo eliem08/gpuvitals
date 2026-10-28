@@ -356,23 +356,29 @@ class Billing:
         with urllib.request.urlopen(req, timeout=20) as r:
             return json.loads(r.read())
 
+    # Plans sold as one-time purchases, not subscriptions. Everything else in
+    # STRIPE_PRICES is a monthly subscription and carries the 14-day trial.
+    ONE_TIME_PLANS = frozenset({"single"})
+
     def checkout(self, plan: str) -> str:
         if not self.enabled:
             raise BadRequest("self-serve checkout is not configured on this server")
         price = self.prices.get(plan)
         if not price:
             raise BadRequest(f"unknown plan {plan!r}; choose one of {sorted(self.prices)}")
-        session = self._stripe(
-            "checkout/sessions",
-            {
-                "mode": "subscription",
-                "line_items[0][price]": price,
-                "line_items[0][quantity]": "1",
-                "metadata[plan]": plan,
-                "success_url": f"{self.public_url}/billing/success?session_id={{CHECKOUT_SESSION_ID}}",
-                "cancel_url": f"{self.public_url}/pricing",
-            },
-        )
+        form = {
+            "line_items[0][price]": price,
+            "line_items[0][quantity]": "1",
+            "metadata[plan]": plan,
+            "success_url": f"{self.public_url}/billing/success?session_id={{CHECKOUT_SESSION_ID}}",
+            "cancel_url": f"{self.public_url}/pricing",
+        }
+        if plan in self.ONE_TIME_PLANS:
+            form["mode"] = "payment"
+        else:
+            form["mode"] = "subscription"
+            form["subscription_data[trial_period_days]"] = "14"
+        session = self._stripe("checkout/sessions", form)
         return session["url"]
 
     def verify(self, body: bytes, header: str, now: float | None = None) -> dict:
@@ -561,13 +567,17 @@ def pricing_page(billing: Billing) -> str:
         )
     cards = "".join(
         f'<section><h2>{e(plan.title())}</h2><form method="post" action="/billing/checkout">'
-        f'<input type="hidden" name="plan" value="{e(plan)}"><button>Subscribe</button></form></section>'
+        f'<input type="hidden" name="plan" value="{e(plan)}">'
+        f"<button>{'Buy once' if plan in Billing.ONE_TIME_PLANS else 'Subscribe'}</button>"
+        "</form></section>"
         for plan in billing.prices
     )
     return _shell(
         "Pricing",
         f"<h1>{e(SPEC['name'])} plans</h1><p>{e(SPEC['tagline'])}</p>{cards}"
-        "<p><small>Payments by Stripe. Your API key appears right after checkout.</small></p>",
+        "<p><small>Payments by Stripe. Your API key appears right after checkout. "
+        "Monthly plans include a 14-day free trial; Single report is a one-time purchase."
+        "</small></p>",
     )
 
 
