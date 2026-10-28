@@ -47,20 +47,22 @@ To sell self-serve, set four variables and point a Stripe webhook at `https://<y
 |---|---|
 | `STRIPE_SECRET_KEY` | `sk_live_...` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` |
-| `STRIPE_PRICES` | `team=price_123,business=price_456` |
+| `STRIPE_PRICES` | `single=price_123,seller=price_456,marketplace=price_789` |
 | `PUBLIC_URL` | `https://gpuvitals.example.com` |
 
-Buyers pick a plan on `/pricing`, pay on Stripe Checkout and see their API key once on the success page. Cancelling the subscription revokes the key. A selling server always requires a key.
+Buyers pick a plan on `/pricing`, pay on Stripe Checkout and see their API key once on the success page. Cancelling the subscription revokes the key. A selling server always requires a key. See `.env.example` for the full variable list (names only, no values).
 
 ## Pricing
 
-Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless noted.
+Monthly plans start with a 14-day free trial. Single report is a one-time purchase. Prices in USD, billed monthly unless noted.
 
 | Plan | Price | Includes |
 |---|---|---|
 | **Single report** | $9 per GPU | A-F grade; Itemised deductions; Fair-price estimate |
-| **Seller** | $49 per month | Unlimited reports; Shareable report IDs; Listing badge |
-| **Marketplace** | $499 per month | API access; Bulk grading; Fraud checks |
+| **Seller** | $49 per month | Everything in Single report |
+| **Marketplace** | $499 per month | Everything in Single report |
+
+All plans unlock the same software in this release; higher tiers add licence scope and support, not gated features — no feature is gated by plan in the code. Listing badges, bulk grading, and fraud checks are Roadmap items, not shipped features.
 
 To start a trial or buy a plan, [request access](https://github.com/eliem08/gpuvitals/issues/new?title=GPU%20Vitals%20trial&labels=sales).
 
@@ -97,6 +99,7 @@ gpuvitals report capture.csv --hours 14000 --mining --market-price 1400
 - Signed capture agent (tamper-evident) + hosted public report pages
 - Marketplace integrations: "Carfax verified" badge on listings
 - Fleet-level history: same serial seen across resales
+- Bulk grading, fraud checks, and listing badges as plan features (claimed by earlier pricing copy, not in this release)
 
 ## Development
 
