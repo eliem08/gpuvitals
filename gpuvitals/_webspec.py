@@ -70,4 +70,19 @@ SPEC = {
             "id": "report",
         },
     ],
+    "plans": [
+        {
+            "key": "single-report",
+            "name": "Single report",
+            "price": "$9 per GPU",
+            "features": ["A-F grade", "Itemised deductions", "Fair-price estimate"],
+        },
+        {"key": "seller", "name": "Seller", "price": "$49 per month", "features": ["Unlimited reports", "Report IDs"]},
+        {
+            "key": "marketplace",
+            "name": "Marketplace",
+            "price": "$499 per month",
+            "features": ["API access", "JSON output", "Mining-wear deductions"],
+        },
+    ],
 }
