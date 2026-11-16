@@ -54,15 +54,18 @@ Buyers pick a plan on `/pricing`, pay on Stripe Checkout and see their API key o
 
 ## Pricing
 
-Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless noted.
+Monthly plans start with a 14-day free trial. Prices in USD, billed monthly unless noted.
 
 | Plan | Price | Includes |
 |---|---|---|
 | **Single report** | $9 per GPU | A-F grade; Itemised deductions; Fair-price estimate |
-| **Seller** | $49 per month | Unlimited reports; Shareable report IDs; Listing badge |
-| **Marketplace** | $499 per month | API access; Bulk grading; Fraud checks |
+| **Seller** | $49 per month | Unlimited reports; Report IDs |
+| **Marketplace** | $499 per month | API access; JSON output; Mining-wear deductions |
 
 To start a trial or buy a plan, [request access](https://github.com/eliem08/gpuvitals/issues/new?title=GPU%20Vitals%20trial&labels=sales).
+
+Plan note: every plan runs the same software, and every API key unlocks all of it. Seat, agent and volume
+limits are licence terms; the code does not enforce them. Support, SLA and done-for-you items are services.
 
 ## Licence
 
