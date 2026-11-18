@@ -9,7 +9,7 @@
 
 **The problem:** Used GPUs, especially ex-mining cards, hide thermal, clock and memory problems that only show up after you've paid.
 
-**What you get:** Grade an nvidia-smi stress capture from A to F with explained deductions and a fair-price multiplier.
+**What you get:** Grade an nvidia-smi stress capture from A to F with explained deductions and a fair-price multiplier, calibrated to the cards you have seen fail.
 
 ## Quickstart
 
@@ -19,6 +19,7 @@ Customers receive a release archive with the wheel and the examples. Python 3.10
 pip install gpuvitals-0.1.0-py3-none-any.whl
 gpuvitals capture-cmd
 gpuvitals report examples/capture.csv --hours 14000 --market-price 800
+gpuvitals calibrate examples/fleet/labels.csv --captures examples/fleet
 ```
 
 ## Web app and API
@@ -33,7 +34,7 @@ docker build -t gpuvitals . && docker run -p 8000:8000 -e API_KEYS=sk_... -v gpu
 
 Every API call needs `Authorization: Bearer <key>` once any key exists; a server on a public address refuses to start without one. Calls are rate-limited per key (60/min, `--rate`) and metered: `gpuvitals-web usage` prints calls per key for billing.
 
-Endpoints: `POST /api/capture-cmd`, `POST /api/report`, plus `GET /healthz` and `GET /api/spec` (machine-readable field list).
+Endpoints: `POST /api/capture-cmd`, `POST /api/report`, `POST /api/calibrate`, plus `GET /healthz` and `GET /api/spec` (machine-readable field list).
 Files are sent as `{"name": ..., "content": ...}`, folders as `{"files": [...]}` or a base64 zip.
 
 ## Deploy and sell
@@ -61,7 +62,7 @@ Monthly plans start with a 14-day free trial. Prices in USD, billed monthly unle
 |---|---|---|
 | **Single report** | $9 per GPU | A-F grade; Itemised deductions; Fair-price estimate |
 | **Seller** | $49 per month | Unlimited reports; Report IDs |
-| **Marketplace** | $499 per month | API access; JSON output; Mining-wear deductions |
+| **Marketplace** | $499 per month | API access; JSON output; Mining-wear deductions; Grading calibrated to your failure data |
 
 To start a trial or buy a plan, [request access](https://github.com/eliem08/gpuvitals/issues/new?title=GPU%20Vitals%20trial&labels=sales).
 
@@ -89,12 +90,38 @@ Proprietary. Copyright (c) 2026 eliem08. All rights reserved. Use requires a pai
   reference market price
 - Report ID = SHA-256 of the capture, so a buyer can verify the report matches the data
 
+## Calibrate to the cards you have sold
+
+The deduction points are starting values. Once you know which graded cards later failed or came back, fit the
+grading to them:
+
+```bash
+gpuvitals calibrate labels.csv --captures ./captures --out calibration.json
+gpuvitals report capture.csv --calibration calibration.json
+```
+
+`labels.csv` has a `capture` column (file name in `--captures`) and `failed` (yes/no), and optionally `hours`
+and `mining`. You need at least 20 cards, with at least 5 failed and 5 healthy.
+
+How the fit works and how you can check it:
+- A logistic regression learns how much one point of each warning sign (running hot, low clocks, ECC errors and
+  so on) raises the odds of failure in your cards.
+- Each sign gets a multiplier relative to the average sign. A sign that did not predict failure gets 0 and is
+  named. A sign seen on fewer than 3 cards keeps 1, because there is too little evidence to judge it.
+- The command prints the ranking quality (AUC) of the built-in points and of the calibrated points, the latter
+  cross-validated, and recommends the calibration only if it ranks better out of sample.
+- It shows the failure rate in each grade.
+
+`examples/fleet` holds 80 synthetic cards for trying the command, not real GPUs. In that fleet only memory
+errors cause failures, so calibration learns to stop penalising hot and slow-clocked cards.
+
 ## Quickstart
 
 ```bash
 pip install -e .
 gpuvitals capture-cmd                    # run this on the seller's machine during a 10-min stress test
 gpuvitals report capture.csv --hours 14000 --mining --market-price 1400
+gpuvitals calibrate examples/fleet/labels.csv --out calibration.json   # fit the grading to known outcomes
 ```
 
 ## Roadmap

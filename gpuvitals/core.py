@@ -9,7 +9,21 @@ import math
 import re
 from dataclasses import dataclass, field
 
-__all__ = ["CAPTURE_CMD", "parse_capture", "grade", "Report"]
+__all__ = ["CAPTURE_CMD", "SIGNALS", "parse_capture", "grade", "Report"]
+
+# every deduction belongs to one warning sign; calibration scales the points of each sign
+SIGNALS = (
+    "thermal_throttle",
+    "runs_hot",
+    "low_clock",
+    "low_power",
+    "fan_maxed",
+    "ecc_uncorrected",
+    "ecc_corrected",
+    "retired_pages",
+    "power_on_hours",
+    "mining",
+)
 
 FIELDS = [
     "timestamp",
@@ -69,6 +83,7 @@ class Report:
     score: int
     grade: str
     deductions: list = field(default_factory=list)
+    signals: dict = field(default_factory=dict)  # sign -> points before calibration
     metrics: dict = field(default_factory=dict)
     price_multiplier: float = 1.0
     fair_price: float | None = None
@@ -85,7 +100,9 @@ def grade(
     market_price: float | None = None,
     throttle_temp: float = 83.0,
     min_load_samples: int = MIN_LOAD_SAMPLES,
+    multipliers: dict | None = None,
 ) -> Report:
+    """multipliers: per-sign point scaling from `calibrate` (1.0 = built-in points)."""
     for name, v in (("hours", hours), ("market_price", market_price)):
         if v is not None and not (math.isfinite(v) and v >= 0):
             raise ValueError(f"{name} must be a finite number >= 0, got {v!r}")
@@ -120,27 +137,36 @@ def grade(
     }
     d = []
     if m["peak_temp"] is not None and m["peak_temp"] >= throttle_temp:
-        d.append(("thermal throttling reached", min(25, 5 + 3 * (m["peak_temp"] - throttle_temp))))
+        d.append(("thermal_throttle", "thermal throttling reached", min(25, 5 + 3 * (m["peak_temp"] - throttle_temp))))
     elif m["sustained_temp"] is not None and m["sustained_temp"] >= throttle_temp - 8:
-        d.append(("runs hot under load", 6))
+        d.append(("runs_hot", "runs hot under load", 6))
     if m["clock_ratio"] is not None and m["clock_ratio"] < 0.9:
-        d.append((f"SM clock only {m['clock_ratio']:.0%} of max boost", round(min(25, (0.9 - m["clock_ratio"]) * 100))))
+        d.append(
+            (
+                "low_clock",
+                f"SM clock only {m['clock_ratio']:.0%} of max boost",
+                round(min(25, (0.9 - m["clock_ratio"]) * 100)),
+            )
+        )
     if m["power_ratio"] is not None and m["power_ratio"] < 0.8:
-        d.append((f"can't reach power limit ({m['power_ratio']:.0%})", 8))
+        d.append(("low_power", f"can't reach power limit ({m['power_ratio']:.0%})", 8))
     if m["fan_peak"] is not None and m["fan_peak"] >= 95 and (m["sustained_temp"] or 0) >= throttle_temp - 8:
-        d.append(("fan maxed while still hot - cooler/paste/pads need service", 10))
+        d.append(("fan_maxed", "fan maxed while still hot - cooler/paste/pads need service", 10))
     if ecc_u:
-        d.append((f"{ecc_u:.0f} uncorrected ECC errors", 40))
+        d.append(("ecc_uncorrected", f"{ecc_u:.0f} uncorrected ECC errors", 40))
     if ecc_c:
-        d.append((f"{ecc_c:.0f} corrected ECC errors", min(15, 3 + ecc_c / 10)))
+        d.append(("ecc_corrected", f"{ecc_c:.0f} corrected ECC errors", min(15, 3 + ecc_c / 10)))
     if retired:
-        d.append(("memory page retirement pending", 20))
+        d.append(("retired_pages", "memory page retirement pending", 20))
     if hours is not None and hours > 8760:
-        d.append((f"{hours:,.0f} power-on hours", min(15, round((hours - 8760) / 2000))))
+        d.append(("power_on_hours", f"{hours:,.0f} power-on hours", min(15, round((hours - 8760) / 2000))))
     if mining:
-        d.append(("declared mining history", 8))
+        d.append(("mining", "declared mining history", 8))
 
-    score = max(0, round(100 - sum(p for _, p in d)))
+    signals = {k: float(p) for k, _, p in d}
+    mult_by_sign = multipliers or {}
+    scaled = [(k, r, p * mult_by_sign.get(k, 1.0)) for k, r, p in d]
+    score = max(0, round(100 - sum(p for _, _, p in scaled)))
     g = "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 65 else "D" if score >= 50 else "F"
     mult = {"A": 1.0, "B": 0.92, "C": 0.8, "D": 0.6, "F": 0.3}[g]
     first = rows[0] if rows else {}
@@ -151,7 +177,8 @@ def grade(
         samples=len(rows),
         score=score,
         grade=g,
-        deductions=[(r, round(p, 1)) for r, p in d],
+        deductions=[(r, round(p, 1)) for _, r, p in scaled if p > 0],
+        signals=signals,
         metrics=m,
         price_multiplier=mult,
         fair_price=round(market_price * mult, 2) if market_price else None,

@@ -5,6 +5,7 @@ import math
 import os
 import sys
 
+from .calibrate import calibrate, load_cards, load_multipliers
 from .core import CAPTURE_CMD, grade
 
 
@@ -26,6 +27,11 @@ def build_parser():
     r.add_argument("--mining", action="store_true")
     r.add_argument("--market-price", type=_finite_float)
     r.add_argument("--json", action="store_true")
+    r.add_argument("--calibration", help="file from `calibrate` (default: built-in points)")
+    c = sub.add_parser("calibrate", help="fit the grading to cards whose fate you know")
+    c.add_argument("labels", help="CSV: capture, failed (yes/no)[, hours, mining]")
+    c.add_argument("--captures", help="folder the capture paths are relative to (default: the CSV's folder)")
+    c.add_argument("--out", help="write the calibration here, for report --calibration")
     return ap
 
 
@@ -36,8 +42,33 @@ def _run(argv=None):
         print("# Start a stress test (e.g. gpu-burn 600) in another terminal, then run:")
         print(CAPTURE_CMD)
         return 0
+    if a.cmd == "calibrate":
+        res = calibrate(load_cards(a.labels, a.captures))
+        print(f"{res['cards']} cards, {res['failed']} failed")
+        print(
+            f"  ranking quality (AUC): built-in points {res['auc_default']:.3f}, "
+            f"calibrated {res['auc_calibrated_cv']:.3f} (cross-validated)"
+        )
+        for k, v in res["multipliers"].items():
+            print(f"  {k:<18} x{v:g}")
+        if res["backwards_signs"]:
+            print(f"  did not predict failure in your cards (set to 0): {', '.join(res['backwards_signs'])}")
+        if res["too_rare_to_judge"]:
+            print(f"  too few cards to judge (kept at 1): {', '.join(res['too_rare_to_judge'])}")
+        for g in res["grades"]:
+            rate = "-" if g["failure_rate"] is None else f"{g['failure_rate']:.0%} failed"
+            print(f"  grade {g['grade']}  {g['cards']:>4} cards  {rate}")
+        print(
+            "calibration: " + ("use it" if res["recommended"] else "it does not beat the built-in points; keep those")
+        )
+        if a.out:
+            with open(a.out, "w", encoding="utf-8") as fh:
+                json.dump(res, fh, indent=2)
+            print(f"written to {a.out}; grade with report --calibration {a.out}")
+        return 0
+    mult = load_multipliers(a.calibration) if a.calibration else None
     with open(a.capture, encoding="utf-8-sig") as fh:
-        rep = grade(fh.read(), a.hours, a.mining, a.market_price)
+        rep = grade(fh.read(), a.hours, a.mining, a.market_price, multipliers=mult)
     if a.json:
         print(json.dumps(rep.__dict__, indent=2))
         return 0
