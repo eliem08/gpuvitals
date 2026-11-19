@@ -19,7 +19,7 @@ Customers receive a release archive with the wheel and the examples. Python 3.10
 pip install gpuvitals-0.1.0-py3-none-any.whl
 gpuvitals capture-cmd
 gpuvitals report examples/capture.csv --hours 14000 --market-price 800
-gpuvitals calibrate examples/fleet/labels.csv --captures examples/fleet
+gpuvitals calibrate examples/fleet/labels.csv --captures examples/fleet --out gv-calibration.json
 ```
 
 ## Web app and API

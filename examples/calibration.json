@@ -1,0 +1,51 @@
+{
+  "multipliers": {
+    "thermal_throttle": 1.0,
+    "runs_hot": 0.0,
+    "low_clock": 0.0,
+    "low_power": 1.0,
+    "fan_maxed": 1.0,
+    "ecc_uncorrected": 1.0,
+    "ecc_corrected": 1.0,
+    "retired_pages": 1.0,
+    "power_on_hours": 1.0,
+    "mining": 1.0
+  },
+  "recommended": true,
+  "auc_default": 0.7833,
+  "auc_calibrated_cv": 0.882,
+  "cards": 80,
+  "failed": 30,
+  "backwards_signs": [
+    "runs_hot",
+    "low_clock"
+  ],
+  "too_rare_to_judge": [],
+  "grades": [
+    {
+      "grade": "A",
+      "cards": 65,
+      "failure_rate": 0.246
+    },
+    {
+      "grade": "B",
+      "cards": 15,
+      "failure_rate": 0.933
+    },
+    {
+      "grade": "C",
+      "cards": 0,
+      "failure_rate": null
+    },
+    {
+      "grade": "D",
+      "cards": 0,
+      "failure_rate": null
+    },
+    {
+      "grade": "F",
+      "cards": 0,
+      "failure_rate": null
+    }
+  ]
+}
